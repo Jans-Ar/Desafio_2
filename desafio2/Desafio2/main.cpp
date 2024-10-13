@@ -6,26 +6,50 @@ using namespace std;
 
 int main()
 {
-    Termex emp;
-    emp.crearEstacion();
+    espacios();
+    char regiones[3]={'N', 'S', 'C'};
+    float precios[3]={10000, 12000, 160000};
+    int nES = 1;
     EDS **misES = nullptr;
-    misES = new EDS*[2];
+    misES = new EDS*[nES];
+    EDS **aux = nullptr;
+    aux = new EDS*[nES];
+    int codigoES = 0;
+
     int opc=0;
-    while(opc!=3){
-        cout << "Bienvenido a TerMax EDS!" << endl;
-        cout << "1. Crear EDS" << endl;
-        cout << "2. Ver EDS" << endl;
-        cout << "3. salir" << endl;
-        cout << "Ingrese una opcion: ";
+
+    while(opc!=6){
+        menu();
         cin >> opc;
-        if (opc==1){
-            *(misES+0) = new EDS(1, 'M', 'M', 'S', 'M', 2, 4, 12000, 13000 , 17000);
-            *(misES+1) = new EDS(2, 'T', 'M', 'N', 'C', 2, 4, 12000, 13000 , 17000);
-
-        }else if(opc==2){
-            imprimirEstaciones(misES);
+        switch (opc) {
+        case 1:
+            *(misES+(nES-1)) = new EDS(nES);
+            //cout << misES[nES-1]->getCodigoES() << endl;
+            copiarEstacion(misES,aux, nES);
+            borrarPtr(misES, nES);
+            nES+=1;
+            misES = new EDS*[nES];
+            copiarEstacion(aux, misES, nES-1);
+            borrarPtr(aux, nES-1);
+            aux = new EDS*[nES];
+            break;
+        case 2:
+            imprimirEstaciones(misES, nES-1);
+            cout << "Elija una estacion por codigo:";
+            //cin >> opc;
+            break;
+        case 3:
+            cout << "Ingrese codigo de estacion a eliminar: ";
+            cin >> codigoES;
+            eliminarEstacion(misES, nES, codigoES);
+            nES-=1;
+            break;
+        default:
+            cout << "Elija una opcion correcta: " << endl;
+            break;
         }
-    }
 
+        espacios();
+    }
     return 0;
 }
