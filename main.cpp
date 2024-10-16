@@ -35,7 +35,7 @@ public:
     }
 
     void venta(int cantidad, char tipoCombustible, int &litrosR, int &litrosP, int &litrosE,
-               int &vendidosR, int &vendidosP, int &vendidosE, float &costo,
+               short unsigned int &vendidosR, short unsigned int &vendidosP, short unsigned int &vendidosE, float &costo,
                const float preciosR[3]) {
 
         int tipoCombustibleI;
@@ -90,14 +90,14 @@ private:
 
     static const short int MaxSurtidores = 12;
     Surtidor surtidores[MaxSurtidores];
-    int cantidadSurtidores;
-    int litrosVendidosR;
-    int litrosVendidosP;
-    int litrosVendidosE;
+    unsigned short int cantidadSurtidores;
+    unsigned short int litrosVendidosR;
+    unsigned short int litrosVendidosP;
+    unsigned short int litrosVendidosE;
 
     int litrosR, litrosP, litrosE;
 
-    // Arreglos para precios de combustible por tipo
+
     float preciosRegion[3];  // [0] Norte, [1] Sur, [2] Centro
 
 public:
@@ -149,10 +149,18 @@ public:
         return litrosVendidosE;
     }
 
+    bool surtidorExiste(string codigo) {
+        for (int i = 0; i < MaxSurtidores; i++) {
+           if (surtidores[i].getCodigo() == codigo) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     void agregarSurtidor(string codigo) {
         if (cantidadSurtidores < MaxSurtidores) {
-            surtidores[cantidadSurtidores] = Surtidor(codigo, region); // Asegúrate de pasar la region
+            surtidores[cantidadSurtidores] = Surtidor(codigo, region);
             cantidadSurtidores++;
             cout << "Surtidor " << codigo << " agregado.\n";
         } else {
@@ -214,7 +222,6 @@ public:
         // Llama a la funcion de venta litrosVendidosR;
         surtidores[surtidorElegido].venta(cantidad, tipoCombustible, litrosR, litrosP, litrosE,  litrosVendidosR, litrosVendidosP, litrosVendidosE, costo, PreciosR);
 
-        // Imprimir el costo total de la venta
         cout << "Costo total de la venta: " << costo << endl;
     }
 
@@ -231,15 +238,15 @@ public:
 class TerMax {
 private:
     estacionServ** estaciones;
-    int numEstaciones;
-    int capacidadMaxima;
+    unsigned short int numEstaciones;
+    unsigned short int capacidadMaxima;
 
     float preciosNorte[3];  // Precios para Regular, Premium y EcoExtra en Norte
     float preciosSur[3];    // Precios para Regular, Premium y EcoExtra en Sur
     float preciosCentro[3]; // Precios para Regular, Premium y EcoExtra en Centro
 
     void redimensionarEstaciones() {
-        int nuevaCapacidad = capacidadMaxima * 2;
+        unsigned short int nuevaCapacidad = capacidadMaxima * 2;
         estacionServ** nuevoArreglo = new estacionServ*[nuevaCapacidad];
 
         for (int i = 0; i < numEstaciones; i++) {
@@ -260,10 +267,10 @@ public:
         return preciosNorte; // Devuelve un puntero al primer elemento
     }
     float* getPreciosSur() {
-        return preciosSur; // Devuelve un puntero al primer elemento
+        return preciosSur;
     }
     float* getPreciosCentro() {
-        return preciosCentro; // Devuelve un puntero al primer elemento
+        return preciosCentro;
     }
 
 
@@ -425,6 +432,17 @@ public:
             estaciones[i]->mostrarLitrosRestantes();  // Llamada al método de estacionServ
         }
     }
+
+    bool surtidorExiste(string idEstacion, string codigoSurtidor) {
+        for (int i = 0; i < numEstaciones; i++) {
+            if (estaciones[i]->getIdentificador() == idEstacion) {
+                if(estaciones[i]->surtidorExiste(codigoSurtidor) == true){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 };
 
 // Menu principal
@@ -448,7 +466,7 @@ void mostrarMenu() {
 
 
 int main() {
-    TerMax redNacional;
+    TerMax TerMax1;
     int opcion;
 
     do {
@@ -460,7 +478,7 @@ int main() {
         switch (opcion) {
 
         case 1:
-            redNacional.mostrarEstaciones();
+            TerMax1.mostrarEstaciones();
             break;
         case 2: {
             string nombre, id, gerente, region;
@@ -468,12 +486,25 @@ int main() {
             getline(cin, nombre);
             cout << "Ingrese el ID de la nueva estacion: ";
             getline(cin, id);
+            bool idExiste = false;
+            for (int i = 0; i < TerMax1.getNumEstaciones(); i++) {
+                if (TerMax1.getEstacion(i)->getIdentificador() == id) {
+                    idExiste = true;
+                    cout << "La estacion con el codigo " << TerMax1.getEstacion(i)->getIdentificador() << " no se puede agregar de nuevo.\n";
+                    break;
+                }
+            }
+
+            if (idExiste) {
+                break;
+            }
+
             cout << "Ingrese el nombre del gerente: ";
             getline(cin, gerente);
             cout << "Ingrese la region (Norte/Sur/Centro): ";
             getline(cin, region);
             cout << "\n";
-            redNacional.agregarEstacion(new estacionServ(nombre, id, gerente, region));
+            TerMax1.agregarEstacion(new estacionServ(nombre, id, gerente, region));
             break;
         }
 
@@ -482,7 +513,7 @@ int main() {
             cout << "Ingrese el ID de la estacion a eliminar: ";
             getline(cin, id);
             cout << "\n";
-            redNacional.eliminarEstacion(id);
+            TerMax1.eliminarEstacion(id);
             break;
         }
 
@@ -499,7 +530,7 @@ int main() {
             cout << "Ingrese el nuevo precio: ";
             cin >> precio;
             cout << "\n";
-            redNacional.establecerPrecioRegion(region, tipoCombustible, precio);
+            TerMax1.establecerPrecioRegion(region, tipoCombustible, precio);
 
             break;
         }
@@ -511,16 +542,16 @@ int main() {
             cout << "\n"      ;
 
             bool estacionEncontrada = false;
-            for (int i = 0; i < redNacional.getNumEstaciones(); i++) {
-                if (redNacional.getEstacion(i)->getIdentificador() == idEstacion) {
+            for (int i = 0; i < TerMax1.getNumEstaciones(); i++) {
+                if (TerMax1.getEstacion(i)->getIdentificador() == idEstacion) {
                     estacionEncontrada = true;
-                    cout << "Simulando venta en la estacion: " << redNacional.getEstacion(i)->getNombre() << endl;
-                    if (redNacional.getEstacion(i)->getRegion() == "Norte") {
-                         redNacional.getEstacion(i)->simularVenta(redNacional.getPreciosNorte());
-                    } else if (redNacional.getEstacion(i)->getRegion() == "Sur") {
-                        redNacional.getEstacion(i)->simularVenta(redNacional.getPreciosSur());
-                    } else if (redNacional.getEstacion(i)->getRegion() == "Centro") {
-                        redNacional.getEstacion(i)->simularVenta(redNacional.getPreciosCentro());
+                    cout << "Simulando venta en la estacion: " << TerMax1.getEstacion(i)->getNombre() << endl;
+                    if (TerMax1.getEstacion(i)->getRegion() == "Norte") {
+                        TerMax1.getEstacion(i)->simularVenta(TerMax1.getPreciosNorte());
+                    } else if (TerMax1.getEstacion(i)->getRegion() == "Sur") {
+                        TerMax1.getEstacion(i)->simularVenta(TerMax1.getPreciosSur());
+                    } else if (TerMax1.getEstacion(i)->getRegion() == "Centro") {
+                        TerMax1.getEstacion(i)->simularVenta(TerMax1.getPreciosCentro());
                     }
                     break;
                 }
@@ -537,13 +568,13 @@ int main() {
             getline(cin, idEstacion);
 
             bool estacionEncontrada = false;
-            for (int i = 0; i < redNacional.getNumEstaciones(); i++) {
-                if (redNacional.getEstacion(i)->getIdentificador() == idEstacion) {
+            for (int i = 0; i < TerMax1.getNumEstaciones(); i++) {
+                if (TerMax1.getEstacion(i)->getIdentificador() == idEstacion) {
                     estacionEncontrada = true;
-                    cout << "Litros vendidos en la estacion " << redNacional.getEstacion(i)->getNombre() << ":\n";
-                    cout << "Regular: " << redNacional.getEstacion(i)->getLitrosVendidosR() << " litros\n";
-                    cout << "Premium: " << redNacional.getEstacion(i)->getLitrosVendidosP() << " litros\n";
-                    cout << "EcoExtra: " << redNacional.getEstacion(i)->getLitrosVendidosE() << " litros\n";
+                    cout << "Litros vendidos en la estacion " << TerMax1.getEstacion(i)->getNombre() << ":\n";
+                    cout << "Regular: " << TerMax1.getEstacion(i)->getLitrosVendidosR() << " litros\n";
+                    cout << "Premium: " << TerMax1.getEstacion(i)->getLitrosVendidosP() << " litros\n";
+                    cout << "EcoExtra: " << TerMax1.getEstacion(i)->getLitrosVendidosE() << " litros\n";
                     break;
                 }
             }
@@ -553,7 +584,6 @@ int main() {
             break;
         }
 
-
         case 7: {
             string idEstacion, codigoSurtidor;
             cout << "Ingrese el ID de la estacion: ";
@@ -561,7 +591,7 @@ int main() {
             cout << "Ingrese el codigo del surtidor a activar: ";
             getline(cin, codigoSurtidor);
             cout << "\n";
-            redNacional.activarSurtidor(idEstacion, codigoSurtidor);
+            TerMax1.activarSurtidor(idEstacion, codigoSurtidor);
             break;
         }
 
@@ -572,19 +602,27 @@ int main() {
             cout << "Ingrese el codigo del surtidor a desactivar: ";
             getline(cin, codigoSurtidor);
             cout << "\n";
-            redNacional.desactivarSurtidor(idEstacion, codigoSurtidor);
+            TerMax1.desactivarSurtidor(idEstacion, codigoSurtidor);
             break;
         }
 
         case 9: {
             string idEstacion, codigoSurtidor;
+            bool Existe;
             cout << "Ingrese el ID de la estacion: ";
             getline(cin, idEstacion);
             cout << "Ingrese el codigo del surtidor a agregar: ";
             getline(cin, codigoSurtidor);
-            cout << "\n";
-            redNacional.agregarSurtidor(idEstacion, codigoSurtidor);
-            break;
+            Existe = TerMax1.surtidorExiste(idEstacion, codigoSurtidor);
+            if(Existe){
+                cout << "El codigo del surtidor ya existe.\n";
+                break;
+            }
+            else{
+                cout << "\n";
+                TerMax1.agregarSurtidor(idEstacion, codigoSurtidor);
+                break;
+            }
         }
 
         case 10: {
@@ -594,7 +632,7 @@ int main() {
             cout << "Ingrese el codigo del surtidor a eliminar: ";
             getline(cin, codigoSurtidor);
             cout << "\n";
-            redNacional.eliminarSurtidor(idEstacion, codigoSurtidor);
+            TerMax1.eliminarSurtidor(idEstacion, codigoSurtidor);
             break;
         }
 
@@ -602,11 +640,11 @@ int main() {
             string Region;
             cout << "Ingrese la region (Norte, Centro, Sur):";
             getline(cin, Region);
-            redNacional.mostrarPreciosRegion(Region);
+            TerMax1.mostrarPreciosRegion(Region);
             break;
         }
         case 12:
-            redNacional.mostrarLitrosRestantes();
+            TerMax1.mostrarLitrosRestantes();
             break;
         case 13:
             cout << "Saliendo del programa...\n";
@@ -615,7 +653,6 @@ int main() {
             cout << "Opcion no valida.\n";
             break;
         }
-
         cout << endl;
     } while (opcion != 13);
 
