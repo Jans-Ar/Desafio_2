@@ -223,6 +223,7 @@ public:
         cout << "Regular: " << litrosR << " litros\n";
         cout << "Premium: " << litrosP << " litros\n";
         cout << "EcoExtra: " << litrosE << " litros\n";
+        cout << "\n" ;
     }
 };
 
@@ -440,7 +441,8 @@ void mostrarMenu() {
     cout << "9. Agregar surtidor\n";
     cout << "10. Eliminar surtidor\n";
     cout << "11. Mostrar precios de una region\n";
-    cout << "12. Salir\n";
+    cout << "12. Mostrar los litros restantes\n";
+    cout << "13. Salir\n";
     cout << "Ingrese una opcion: ";
 }
 
@@ -604,14 +606,18 @@ int main() {
             break;
         }
         case 12:
+            redNacional.mostrarLitrosRestantes();
+            break;
+        case 13:
             cout << "Saliendo del programa...\n";
+            break;
         default:
             cout << "Opcion no valida.\n";
             break;
         }
 
         cout << endl;
-    } while (opcion != 12);
+    } while (opcion != 13);
 
     return 0;
 }
