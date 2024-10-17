@@ -46,7 +46,6 @@ public:
             cout << "Tipo de combustible no valido." << endl;
             return;
         }
-
         // Calcular litros disponibles
         int &litrosDisponibles = (tipoCombustible == 'R') ? litrosR : (tipoCombustible == 'P') ? litrosP : litrosE;
         int litrosAUsar = min(litrosDisponibles, cantidad); // Usar lo que haya disponible
@@ -71,7 +70,7 @@ public:
         litrosDisponibles -= litrosAUsar; // Actualiza litros restantes
 
         cout << "Venta realizada de " << litrosAUsar << " litros de " << tipoCombustible << "." << endl;
-        cout << "Costo total de la venta: " << costo << endl; // Muestra el costo total aquí
+        cout << "Costo total de la venta: " << costo << endl;
     }
 
 
@@ -95,7 +94,7 @@ private:
     unsigned short int litrosVendidosP;
     unsigned short int litrosVendidosE;
 
-    int litrosR, litrosP, litrosE;
+    int litrosR, litrosP, litrosE, litrosInicialR, litrosInicialP, litrosInicialE;
 
 
     float preciosRegion[3];  // [0] Norte, [1] Sur, [2] Centro
@@ -112,9 +111,9 @@ public:
     }
 
     void LitrosTanqueCentral() {
-        litrosR = 100 + rand() % 101;
-        litrosP = 100 + rand() % 101;
-        litrosE = 100 + rand() % 101;
+        litrosInicialR = litrosR = 100 + rand() % 101;
+        litrosInicialP = litrosP = 100 + rand() % 101;
+        litrosInicialE = litrosE = 100 + rand() % 101;
 
         cout << "Litros asignados de forma aleatoria:\n";
         cout << "Regular: " << litrosR << " litros\n";
@@ -148,10 +147,43 @@ public:
     int getLitrosVendidosE() const {
         return litrosVendidosE;
     }
+    int getLitrosR() const {
+        return litrosR;
+    }
 
+    int getLitrosP() const {
+        return litrosP;
+    }
+
+    int getLitrosE() const {
+        return litrosE;
+    }
+    int getCantidadSurtidores() const {
+        return cantidadSurtidores;
+    }
+    int getLitrosInicialR() const {
+        return litrosInicialR;
+    }
+
+    int getLitrosInicialP() const {
+        return litrosInicialP;
+    }
+
+    int getLitrosInicialE() const {
+        return litrosInicialE;
+    }
     bool surtidorExiste(string codigo) {
         for (int i = 0; i < MaxSurtidores; i++) {
-           if (surtidores[i].getCodigo() == codigo) {
+            if (surtidores[i].getCodigo() == codigo) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool surtidorestaActivo() {
+        for (int i = 0; i < MaxSurtidores; i++) {
+            if (surtidores[i].estaActivo()) {
                 return true;
             }
         }
@@ -221,8 +253,6 @@ public:
 
         // Llama a la funcion de venta litrosVendidosR;
         surtidores[surtidorElegido].venta(cantidad, tipoCombustible, litrosR, litrosP, litrosE,  litrosVendidosR, litrosVendidosP, litrosVendidosE, costo, PreciosR);
-
-        cout << "Costo total de la venta: " << costo << endl;
     }
 
     void mostrarLitrosRestantes() const {
@@ -232,6 +262,7 @@ public:
         cout << "EcoExtra: " << litrosE << " litros\n";
         cout << "\n" ;
     }
+
 };
 
 // Clase TerMax
@@ -300,6 +331,7 @@ public:
         agregarEstacion(new estacionServ("Estacion 3", "E003", "Gerente 3", "Centro"));
     }
 
+
     ~TerMax() {
         for (int i = 0; i < numEstaciones; i++) {
             delete estaciones[i];
@@ -316,15 +348,31 @@ public:
     }
 
     void eliminarEstacion(string id) {
+
         for (int i = 0; i < numEstaciones; i++) {
             if (estaciones[i]->getIdentificador() == id) {
-                delete estaciones[i];
-                for (int j = i; j < numEstaciones - 1; j++) {
-                    estaciones[j] = estaciones[j + 1];
+                bool tienesurtidoresactivos = false;
+                unsigned short int cantidadSurtidores = estaciones[i]->getCantidadSurtidores();
+                for (int k = 0; k < cantidadSurtidores ; k++) {
+                    if (estaciones[i]->surtidorestaActivo()){
+                        tienesurtidoresactivos = true;
+
+                        break;
+                    }
+                if (tienesurtidoresactivos){
+                        cout << "La estacion no puede ser eliminada porque tiene surtidores activos. \n";
+                    }
+                else {
+                    delete estaciones[i];
+                    for (int j = i; j < numEstaciones - 1; j++) {
+                        estaciones[j] = estaciones[j + 1];
+                    }
+                    numEstaciones--;
+                    cout << "Estacion con ID " << id << " eliminada.\n";
+                    return;
+                    }
                 }
-                numEstaciones--;
-                cout << "Estacion con ID " << id << " eliminada.\n";
-                return;
+
             }
         }
     }
@@ -379,8 +427,8 @@ public:
         for (int i = 0; i < numEstaciones; i++) {
             cout << "Nombre: " << estaciones[i]->getNombre() << endl;
             cout << "ID: " << estaciones[i]->getIdentificador() << endl;
-            cout << "Gerente: " << estaciones[i]->getGerente() << endl; // Asegúrate de tener un método getGerente() en estacionServ
-            cout << "Region: " << estaciones[i]->getRegion() << endl; // Asegúrate de tener un método getRegion() en estacionServ
+            cout << "Gerente: " << estaciones[i]->getGerente() << endl;
+            cout << "Region: " << estaciones[i]->getRegion() << endl;
             cout << "---------------------\n";
         }
     }
@@ -443,6 +491,37 @@ public:
         }
         return false;
     }
+    void verificarFugas() {
+        for (int i = 0; i < numEstaciones; i++) {
+            unsigned short int litrosE = estaciones[i]->getLitrosE();
+            unsigned short int litrosR = estaciones[i]->getLitrosR();
+            unsigned short int litrosP = estaciones[i]->getLitrosP();
+            unsigned short int litrosVendidosE = estaciones[i]->getLitrosVendidosE();
+            unsigned short int litrosVendidosR = estaciones[i]->getLitrosVendidosR();
+            unsigned short int litrosVendidosP = estaciones[i]->getLitrosVendidosP();
+            unsigned short int litrosInicialE = estaciones[i]->getLitrosInicialE();
+            unsigned short int litrosInicialR = estaciones[i]->getLitrosInicialR();
+           unsigned short int litrosInicialP = estaciones[i]->getLitrosInicialP();
+
+            // Calcula el total restante mas el vendido para cada tipo de combustible
+            float totalRegular = litrosR + litrosVendidosR;
+            float totalPremium = litrosP + litrosVendidosP;
+            float totalEcoExtra = litrosE + litrosVendidosE;
+
+            // Comprueba si es al menos el 95% de los litros iniciales
+            bool fugaRegular = totalRegular < 0.95 * litrosInicialR;
+            bool fugaPremium = totalPremium < 0.95 * litrosInicialP;
+            bool fugaEcoExtra = totalEcoExtra < 0.95 * litrosInicialE;
+
+
+            cout << "Verificacion de fugas para estacion:"<< estaciones[i]->getNombre() << ".\n";
+;
+            cout << "Regular: " << (fugaRegular ? "FUGA DETECTADA" : "SIN FUGA") << endl;
+            cout << "Premium: " << (fugaPremium ? "FUGA DETECTADA" : "SIN FUGA") << endl;
+            cout << "EcoExtra: " << (fugaEcoExtra ? "FUGA DETECTADA" : "SIN FUGA") << endl;
+        }
+        }
+
 };
 
 // Menu principal
@@ -459,8 +538,9 @@ void mostrarMenu() {
     cout << "9. Agregar surtidor\n";
     cout << "10. Eliminar surtidor\n";
     cout << "11. Mostrar precios de una region\n";
-    cout << "12. Mostrar los litros restantes\n";
-    cout << "13. Salir\n";
+    cout << "12. Verificar Fugas\n";
+    cout << "13. Mostrar los litros restantes\n";
+    cout << "14. Salir\n";
     cout << "Ingrese una opcion: ";
 }
 
@@ -509,7 +589,7 @@ int main() {
         }
 
         case 3: {
-            string id;
+            string id, codigoSurtidor;
             cout << "Ingrese el ID de la estacion a eliminar: ";
             getline(cin, id);
             cout << "\n";
@@ -644,9 +724,12 @@ int main() {
             break;
         }
         case 12:
-            TerMax1.mostrarLitrosRestantes();
+            TerMax1.verificarFugas();
             break;
         case 13:
+            TerMax1.mostrarLitrosRestantes();
+            break;
+        case 14:
             cout << "Saliendo del programa...\n";
             break;
         default:
@@ -654,7 +737,7 @@ int main() {
             break;
         }
         cout << endl;
-    } while (opcion != 13);
+    } while (opcion != 14);
 
     return 0;
 }
