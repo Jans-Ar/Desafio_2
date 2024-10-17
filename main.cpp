@@ -90,9 +90,9 @@ private:
     static const short int MaxSurtidores = 12;
     Surtidor surtidores[MaxSurtidores];
     unsigned short int cantidadSurtidores;
-    unsigned short int litrosVendidosR;
-    unsigned short int litrosVendidosP;
-    unsigned short int litrosVendidosE;
+    unsigned short int litrosVendidosR = 0;
+    unsigned short int litrosVendidosP = 0;
+    unsigned short int litrosVendidosE = 0;
 
     int litrosR, litrosP, litrosE, litrosInicialR, litrosInicialP, litrosInicialE;
 
@@ -105,9 +105,6 @@ public:
         LitrosTanqueCentral();
         agregarSurtidor("S1");
         agregarSurtidor("S2");
-        litrosVendidosR = 0;
-        litrosVendidosP = 0;
-        litrosVendidosE = 0;
     }
 
     void LitrosTanqueCentral() {
@@ -234,6 +231,10 @@ public:
             cout << "No hay surtidores disponibles para la venta.\n";
             return;
         }
+        if(surtidorestaActivo() == false){
+            cout << "No tiene surtidores activos para la venta.\n";
+            return;
+        }
         for (int i = 0; i < 3; i++) {
             preciosRegion[i] = PreciosR[i]; // Copia los precios
         }
@@ -348,20 +349,12 @@ public:
     }
 
     void eliminarEstacion(string id) {
-
         for (int i = 0; i < numEstaciones; i++) {
             if (estaciones[i]->getIdentificador() == id) {
-                bool tienesurtidoresactivos = false;
-                unsigned short int cantidadSurtidores = estaciones[i]->getCantidadSurtidores();
-                for (int k = 0; k < cantidadSurtidores ; k++) {
-                    if (estaciones[i]->surtidorestaActivo()){
-                        tienesurtidoresactivos = true;
-
-                        break;
-                    }
-                if (tienesurtidoresactivos){
-                        cout << "La estacion no puede ser eliminada porque tiene surtidores activos. \n";
-                    }
+                if (estaciones[i]->surtidorestaActivo()){
+                    cout << "La estacion no puede ser eliminada porque tiene surtidores activos. \n";
+                    return;
+                }
                 else {
                     delete estaciones[i];
                     for (int j = i; j < numEstaciones - 1; j++) {
@@ -370,11 +363,11 @@ public:
                     numEstaciones--;
                     cout << "Estacion con ID " << id << " eliminada.\n";
                     return;
-                    }
                 }
 
             }
         }
+        cout << "La estacion no fue encontrada.\n";
     }
 
     void establecerPrecioRegion(string region, int tipoCombustible, float precio) {
@@ -501,26 +494,27 @@ public:
             unsigned short int litrosVendidosP = estaciones[i]->getLitrosVendidosP();
             unsigned short int litrosInicialE = estaciones[i]->getLitrosInicialE();
             unsigned short int litrosInicialR = estaciones[i]->getLitrosInicialR();
-           unsigned short int litrosInicialP = estaciones[i]->getLitrosInicialP();
+            unsigned short int litrosInicialP = estaciones[i]->getLitrosInicialP();
 
-            // Calcula el total restante mas el vendido para cada tipo de combustible
+            // Calculamos el total restante más el vendido para cada tipo de combustible
             float totalRegular = litrosR + litrosVendidosR;
             float totalPremium = litrosP + litrosVendidosP;
             float totalEcoExtra = litrosE + litrosVendidosE;
 
-            // Comprueba si es al menos el 95% de los litros iniciales
+            // Comprobamos si es al menos el 95% de los litros iniciales
             bool fugaRegular = totalRegular < 0.95 * litrosInicialR;
             bool fugaPremium = totalPremium < 0.95 * litrosInicialP;
             bool fugaEcoExtra = totalEcoExtra < 0.95 * litrosInicialE;
 
 
+            // Imprimimos resultados
             cout << "Verificacion de fugas para estacion:"<< estaciones[i]->getNombre() << ".\n";
-;
-            cout << "Regular: " << (fugaRegular ? "FUGA DETECTADA" : "SIN FUGA") << endl;
-            cout << "Premium: " << (fugaPremium ? "FUGA DETECTADA" : "SIN FUGA") << endl;
-            cout << "EcoExtra: " << (fugaEcoExtra ? "FUGA DETECTADA" : "SIN FUGA") << endl;
+            ;
+            cout << "Regular: " << (fugaRegular ? "FUGA DETECTADA" : "SIN FUGA.") << endl;
+            cout << "Premium: " << (fugaPremium ? "FUGA DETECTADA" : "SIN FUGA.") << endl;
+            cout << "EcoExtra: " << (fugaEcoExtra ? "FUGA DETECTADA" : "SIN FUGA.\n") << endl;
         }
-        }
+    }
 
 };
 
@@ -551,7 +545,14 @@ int main() {
 
     do {
         mostrarMenu();
-        cin >> opcion;
+        // Validación de entrada
+        if (!(cin >> opcion)) {
+            cout << "Entrada invalida. Por favor, ingrese un numero entero.\n";
+            cin.clear(); // Limpiar el estado de error de cin
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Descartar la entrada incorrecta
+            cout << "\n";
+            continue; // Volver a mostrar el menú
+        }
         cout << "\n";
         cin.ignore(numeric_limits<streamsize>::max(), '\n');  // Limpiar el buffer de entrada
 
