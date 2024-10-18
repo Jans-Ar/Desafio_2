@@ -11,6 +11,7 @@ private:
     string codigoSurtidor;
     bool activo;
     string region;
+    string modelo;
 
 public:
     Surtidor() : codigoSurtidor(""), activo(false), region("") {}
@@ -36,7 +37,7 @@ public:
 
     void venta(int cantidad, char tipoCombustible, int &litrosR, int &litrosP, int &litrosE,
                short unsigned int &vendidosR, short unsigned int &vendidosP, short unsigned int &vendidosE, float &costo,
-               const float preciosR[3]) {
+               const float preciosR[3],float &ventasR,float &ventasP,float &ventasE) {
 
         int tipoCombustibleI;
         if (tipoCombustible == 'R') tipoCombustibleI = 0;
@@ -60,10 +61,13 @@ public:
         // Actualizar litros vendidos
         if (tipoCombustible == 'R') {
             vendidosR += litrosAUsar;
+            ventasR += costo;
         } else if (tipoCombustible == 'P') {
             vendidosP += litrosAUsar;
+            ventasP += costo;
         } else if (tipoCombustible == 'E') {
             vendidosE += litrosAUsar;
+            ventasE += costo;
         }
 
         // Actualizar litros restantes
@@ -87,6 +91,7 @@ private:
     string gerente;
     string region;
 
+
     static const short int MaxSurtidores = 12;
     Surtidor surtidores[MaxSurtidores];
     unsigned short int cantidadSurtidores;
@@ -98,13 +103,28 @@ private:
 
 
     float preciosRegion[3];  // [0] Norte, [1] Sur, [2] Centro
+    float ventasR,ventasP,ventasE;
+    string coordenadas;
 
-public:
-    estacionServ(string nom, string ide, string ger, string reg) : nombre(nom), identificador(ide), gerente(ger), region(reg), cantidadSurtidores(0) {
-        srand(time(0));
+
+
+public: estacionServ(string nom, string ide, string ger, string reg) : nombre(nom), identificador(ide), gerente(ger), region(reg), cantidadSurtidores(0) {
+
+        coordenadas = generarCoordenadas();
         LitrosTanqueCentral();
         agregarSurtidor("S1");
         agregarSurtidor("S2");
+    }
+
+    string generarCoordenadas() {
+        int latGrados = rand() % 13;  // Latitud entre 0 y 89 grados
+        int lonGrados = rand() % 14+66; // Longitud entre 0 y 179 grados
+        char latDir = 'N'; // Norte o Sur
+        char lonDir = 'O'; // Este u Oeste
+
+
+        return to_string(latGrados) + "G " + to_string(rand() % 60) + "' " + latDir + " y " +
+               to_string(lonGrados) + "G " + to_string(rand() % 60) + "' " + lonDir;
     }
 
     void LitrosTanqueCentral() {
@@ -128,8 +148,9 @@ public:
     string getRegion() const {
         return region;
     }
-
-
+    string getCoordenadas() const {
+        return coordenadas;
+    }
     string getIdentificador() const {
         return identificador;
     }
@@ -253,7 +274,8 @@ public:
         float costo = 0.0;  // Inicializa costo
 
         // Llama a la funcion de venta litrosVendidosR;
-        surtidores[surtidorElegido].venta(cantidad, tipoCombustible, litrosR, litrosP, litrosE,  litrosVendidosR, litrosVendidosP, litrosVendidosE, costo, PreciosR);
+        surtidores[surtidorElegido].venta(cantidad, tipoCombustible, litrosR, litrosP, litrosE,  litrosVendidosR,
+                                          litrosVendidosP, litrosVendidosE, costo, PreciosR,ventasR,ventasP,ventasE);
     }
 
     void mostrarLitrosRestantes() const {
@@ -261,6 +283,13 @@ public:
         cout << "Regular: " << litrosR << " litros\n";
         cout << "Premium: " << litrosP << " litros\n";
         cout << "EcoExtra: " << litrosE << " litros\n";
+        cout << "\n" ;
+    }
+    void mostrarVentas() const {
+        cout << "Ventas generadas en la estacion:\n";
+        cout << "Regular: $" << ventasR << "\n";
+        cout << "Premium: $" << ventasP << "\n";
+        cout << "EcoExtra: $" << ventasE << "\n";
         cout << "\n" ;
     }
 
@@ -422,6 +451,7 @@ public:
             cout << "ID: " << estaciones[i]->getIdentificador() << endl;
             cout << "Gerente: " << estaciones[i]->getGerente() << endl;
             cout << "Region: " << estaciones[i]->getRegion() << endl;
+            cout << "Coordenadas: " << estaciones[i]->getCoordenadas() << endl;
             cout << "---------------------\n";
         }
     }
@@ -534,12 +564,14 @@ void mostrarMenu() {
     cout << "11. Mostrar precios de una region\n";
     cout << "12. Verificar Fugas\n";
     cout << "13. Mostrar los litros restantes\n";
-    cout << "14. Salir\n";
+    cout << "14. Monto total de las ventas en una estacion de servicio\n";
+    cout << "15. Salir\n";
     cout << "Ingrese una opcion: ";
 }
 
 
 int main() {
+    srand(time(0));
     TerMax TerMax1;
     int opcion;
 
@@ -730,7 +762,24 @@ int main() {
         case 13:
             TerMax1.mostrarLitrosRestantes();
             break;
-        case 14:
+        case 14:{
+            string idEstacion;
+            cout << "Ingrese el ID de la estacion: ";
+            getline(cin, idEstacion);
+            cout << "\n";
+            bool estacionEncontrada = false;
+            for (int i = 0; i < TerMax1.getNumEstaciones(); i++) {
+                if (TerMax1.getEstacion(i)->getIdentificador() == idEstacion) {
+                    estacionEncontrada = true;
+                    TerMax1.getEstacion(i)->mostrarVentas();
+                }
+            }
+            if (!estacionEncontrada) {
+                cout << "Estacion con ID " << idEstacion << " no encontrada.\n";
+            }
+        }
+            break;
+        case 15:
             cout << "Saliendo del programa...\n";
             break;
         default:
@@ -738,7 +787,7 @@ int main() {
             break;
         }
         cout << endl;
-    } while (opcion != 14);
+    } while (opcion != 15);
 
     return 0;
 }
